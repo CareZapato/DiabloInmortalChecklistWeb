@@ -1,5 +1,7 @@
 export type ActivityType = 'diaria' | 'semanal' | 'temporada';
 export type ActivityPriority = 'S+' | 'S' | 'A+' | 'A' | 'B+' | 'B' | 'C';
+export type ActivityMode = 'individual' | 'grupal' | 'ambas';
+export type ActivityPreference = 'individual' | 'grupal' | null;
 
 export interface Activity {
   id: string;
@@ -10,6 +12,8 @@ export interface Activity {
   recompensas: string;
   mejora: string;
   detalle: string;
+  modo: ActivityMode;
+  preferencia: ActivityPreference;
   created_at: string;
   updated_at: string;
 }

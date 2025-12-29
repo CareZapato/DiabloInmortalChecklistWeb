@@ -52,6 +52,8 @@ export async function createTables(): Promise<void> {
         recompensas TEXT,
         mejora TEXT,
         detalle TEXT,
+        modo VARCHAR(20) DEFAULT 'individual' CHECK (modo IN ('individual', 'grupal', 'ambas')),
+        preferencia VARCHAR(20) CHECK (preferencia IN ('individual', 'grupal') OR preferencia IS NULL),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -142,7 +144,9 @@ export async function seedBaseData(): Promise<void> {
         tiempo_aprox: '30 seg – 1 min',
         recompensas: 'Expediciones familiares, contratos, compra de familiares.',
         mejora: 'Gestión de recursos y progreso con familiares.',
-        detalle: 'Previo a hacer misiones, visita a Nisza para revisar opciones diarias: expediciones familiares, comprar contratos y adquirir familiares según disponibilidad.'
+        detalle: 'Previo a hacer misiones, visita a Nisza para revisar opciones diarias: expediciones familiares, comprar contratos y adquirir familiares según disponibilidad.',
+        modo: 'individual',
+        preferencia: null
       },
       {
         id: 'daily_elder_rift_claim',
@@ -152,7 +156,9 @@ export async function seedBaseData(): Promise<void> {
         tiempo_aprox: '20 segundos',
         recompensas: 'Cimeras raras gratuitas diarias.',
         mejora: 'Resonancia sin costo adicional.',
-        detalle: 'Presentarse diariamente en la Fisura Antigua para reclamar las cimeras raras gratuitas. Solo toma 20 segundos y es progreso garantizado.'
+        detalle: 'Presentarse diariamente en la Fisura Antigua para reclamar las cimeras raras gratuitas. Solo toma 20 segundos y es progreso garantizado.',
+        modo: 'individual',
+        preferencia: null
       },
       {
         id: 'daily_handle_merchant',
@@ -162,7 +168,9 @@ export async function seedBaseData(): Promise<void> {
         tiempo_aprox: '1 min',
         recompensas: 'Ofertas especiales, sobretodo en tiempos limitados.',
         mejora: 'Aprovechar ofertas con descuento o tiempo limitado.',
-        detalle: 'Revisar el mercader de empuñadura diariamente para comprar ofertas especiales, especialmente las de tiempo limitado que pueden tener buen valor.'
+        detalle: 'Revisar el mercader de empuñadura diariamente para comprar ofertas especiales, especialmente las de tiempo limitado que pueden tener buen valor.',
+        modo: 'individual',
+        preferencia: null
       },
       {
         id: 'daily_player_market',
@@ -172,7 +180,9 @@ export async function seedBaseData(): Promise<void> {
         tiempo_aprox: '1 min máximo',
         recompensas: 'Platino por ventas, posibles compras estratégicas.',
         mejora: 'Gestión de economía personal.',
-        detalle: 'Revisar si se vendieron tus artículos en el mercado o buscar ofertas interesantes. Toma máximo 1 minuto y mantiene tu economía activa.'
+        detalle: 'Revisar si se vendieron tus artículos en el mercado o buscar ofertas interesantes. Toma máximo 1 minuto y mantiene tu economía activa.',
+        modo: 'individual',
+        preferencia: null
       },
       // ===== DIARIAS - ACTIVIDADES PRINCIPALES =====
       {
@@ -411,10 +421,10 @@ export async function seedBaseData(): Promise<void> {
 
     for (const activity of activities) {
       await client.query(
-        `INSERT INTO activities (id, nombre, tipo, prioridad, tiempo_aprox, recompensas, mejora, detalle) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        `INSERT INTO activities (id, nombre, tipo, prioridad, tiempo_aprox, recompensas, mejora, detalle, modo, preferencia) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
          ON CONFLICT (id) DO NOTHING`,
-        [activity.id, activity.nombre, activity.tipo, activity.prioridad, activity.tiempo_aprox, activity.recompensas, activity.mejora, activity.detalle]
+        [activity.id, activity.nombre, activity.tipo, activity.prioridad, activity.tiempo_aprox, activity.recompensas, activity.mejora, activity.detalle, activity.modo || 'individual', activity.preferencia || null]
       );
     }
     console.log(`✅ Seeded ${activities.length} activities`);
@@ -424,7 +434,7 @@ export async function seedBaseData(): Promise<void> {
       {
         id: 'battlefield',
         nombre: 'Campo de Batalla',
-        horarios: ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+        horarios: ['08:00', '12:00', '18:00', '22:00'],
         duracion_minutos: 60,
         descripcion: 'Evento PvP 8v8. Las 3 primeras partidas del día otorgan recompensas mejoradas.',
         tipo: 'pvp'
@@ -436,6 +446,30 @@ export async function seedBaseData(): Promise<void> {
         duracion_minutos: 30,
         descripcion: 'Jefe mundial. Aparece en zonas específicas. Recompensas: legendarios, materiales.',
         tipo: 'world_event'
+      },
+      {
+        id: 'demonic_gates',
+        nombre: 'Puertas Demoníacas',
+        horarios: ['12:00', '20:30', '22:00'],
+        duracion_minutos: 30,
+        descripcion: 'Evento grupal. Defiende contra oleadas de demonios para obtener recompensas.',
+        tipo: 'world_event'
+      },
+      {
+        id: 'vault_raid',
+        nombre: 'Asalto a la Cámara',
+        horarios: ['12:00', '19:00'],
+        duracion_minutos: 30,
+        descripcion: 'Evento de facción. Asalta la cámara de la facción contraria para obtener recompensas.',
+        tipo: 'faction'
+      },
+      {
+        id: 'shadow_assembly',
+        nombre: 'Reunión de las Sombras',
+        horarios: ['19:00'],
+        duracion_minutos: 60,
+        descripcion: 'Evento exclusivo de Sombras. Coordina con tu clan para actividades especiales.',
+        tipo: 'faction'
       }
     ];
 

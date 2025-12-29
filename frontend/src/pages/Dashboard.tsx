@@ -14,6 +14,7 @@ const Dashboard: React.FC = () => {
   const [progress, setProgress] = useState<Map<string, boolean>>(new Map());
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [filter, setFilter] = useState<'todas' | 'diaria' | 'semanal' | 'temporada'>('todas');
+  const [modalidadFilter, setModalidadFilter] = useState<'todas' | 'individual' | 'grupal' | 'ambas'>('todas');
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [gameTime, setGameTime] = useState(getGameTime());
   const [chileTime, setChileTime] = useState(getChileTime());
@@ -105,7 +106,15 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const filteredActivities = activities.filter((a) => filter === 'todas' || a.tipo === filter);
+  const filteredActivities = activities.filter((a) => {
+    // Filter by type
+    if (filter !== 'todas' && a.tipo !== filter) return false;
+    
+    // Filter by modalidad
+    if (modalidadFilter !== 'todas' && a.modo !== modalidadFilter) return false;
+    
+    return true;
+  });
 
   const { hours, minutes } = getTimeUntilReset();
 
@@ -224,18 +233,43 @@ const Dashboard: React.FC = () => {
           <div className="lg:col-span-2">
             {/* Filters */}
             <div className="bg-diablo-panel border border-diablo-border rounded-lg p-4 mb-4">
-              <div className="flex gap-2">
-                {['todas', 'diaria', 'semanal', 'temporada'].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f as any)}
-                    className={`px-4 py-2 rounded ${
-                      filter === f ? 'bg-diablo-gold text-diablo-dark' : 'bg-diablo-medium text-gray-300'
-                    }`}
-                  >
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
-                  </button>
-                ))}
+              <div className="mb-3">
+                <h4 className="text-xs text-gray-400 mb-2 font-semibold">TIPO DE ACTIVIDAD</h4>
+                <div className="flex gap-2">
+                  {['todas', 'diaria', 'semanal', 'temporada'].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setFilter(f as any)}
+                      className={`px-4 py-2 rounded transition ${
+                        filter === f ? 'bg-diablo-gold text-diablo-dark font-semibold' : 'bg-diablo-medium text-gray-300 hover:bg-diablo-medium-hover'
+                      }`}
+                    >
+                      {f.charAt(0).toUpperCase() + f.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-xs text-gray-400 mb-2 font-semibold">MODALIDAD</h4>
+                <div className="flex gap-2">
+                  {[
+                    { value: 'todas', icon: '🎮', label: 'Todas' },
+                    { value: 'individual', icon: '👤', label: 'Individual' },
+                    { value: 'grupal', icon: '👥', label: 'Grupal' },
+                    { value: 'ambas', icon: '⚔️', label: 'Ambas' }
+                  ].map((m) => (
+                    <button
+                      key={m.value}
+                      onClick={() => setModalidadFilter(m.value as any)}
+                      className={`px-4 py-2 rounded transition flex items-center gap-2 ${
+                        modalidadFilter === m.value ? 'bg-diablo-gold text-diablo-dark font-semibold' : 'bg-diablo-medium text-gray-300 hover:bg-diablo-medium-hover'
+                      }`}
+                    >
+                      <span>{m.icon}</span>
+                      <span>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -260,9 +294,16 @@ const Dashboard: React.FC = () => {
                       className="w-5 h-5 cursor-pointer"
                     />
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className={getPriorityBadgeClass(activity.prioridad)}>{activity.prioridad}</span>
                         <span className="text-gray-400 text-xs">({activity.tipo})</span>
+                        {activity.modo && (
+                          <span className="px-2 py-0.5 rounded text-xs bg-diablo-medium text-gray-300 border border-diablo-border">
+                            {activity.modo === 'individual' && '👤 Individual'}
+                            {activity.modo === 'grupal' && '👥 Grupal'}
+                            {activity.modo === 'ambas' && '⚔️ Ambas'}
+                          </span>
+                        )}
                         <h3 className="text-diablo-gold-light font-semibold">{activity.nombre}</h3>
                       </div>
                       <p className="text-gray-400 text-sm">⏱ {activity.tiempo_aprox}</p>
@@ -286,6 +327,23 @@ const Dashboard: React.FC = () => {
                         {selectedActivity.prioridad}
                       </span>
                     </div>
+                    {selectedActivity.modo && (
+                      <div>
+                        <h4 className="text-diablo-gold-light font-semibold mb-1">Modalidad</h4>
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 rounded bg-diablo-medium border border-diablo-border">
+                            {selectedActivity.modo === 'individual' && '👤 Individual'}
+                            {selectedActivity.modo === 'grupal' && '👥 Grupal'}
+                            {selectedActivity.modo === 'ambas' && '⚔️ Ambas'}
+                          </span>
+                          {selectedActivity.preferencia && selectedActivity.modo === 'ambas' && (
+                            <span className="text-xs text-gray-400">
+                              (preferencia: {selectedActivity.preferencia === 'individual' ? '👤' : '👥'} {selectedActivity.preferencia})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <h4 className="text-diablo-gold-light font-semibold mb-1">Tiempo</h4>
                       <p>{selectedActivity.tiempo_aprox}</p>
