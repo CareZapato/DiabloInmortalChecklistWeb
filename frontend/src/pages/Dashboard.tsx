@@ -122,73 +122,88 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-diablo-dark">
       {/* Header */}
       <header className="bg-diablo-panel border-b-2 border-diablo-border p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-diablo-gold">⚔️ Diablo Immortal Checklist</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-300">Bienvenido, <span className="text-diablo-gold">{user?.username}</span></span>
-            <button onClick={logout} className="btn-secondary text-sm">
-              Cerrar Sesión
-            </button>
+        <div className="container mx-auto">
+          <div className="flex justify-between items-center flex-wrap gap-3">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-diablo-gold">
+              <span className="hidden sm:inline">⚔️ Diablo Immortal Checklist</span>
+              <span className="sm:hidden">⚔️ DI Checklist</span>
+            </h1>
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <span className="text-gray-300 text-sm sm:text-base">
+                <span className="hidden sm:inline">Bienvenido, </span>
+                <span className="text-diablo-gold">{user?.username}</span>
+              </span>
+              <button onClick={logout} className="btn-secondary text-xs sm:text-sm px-2 sm:px-4">
+                <span className="hidden sm:inline">Cerrar Sesión</span>
+                <span className="sm:hidden">Salir</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Time Bar */}
-      <div className="bg-diablo-medium border-b border-diablo-border p-3">
-        <div className="container mx-auto flex justify-between items-center text-sm">
-          <div className="flex gap-6">
-            <div>
-              <span className="text-gray-400">🎮 Hora del Juego:</span>{' '}
-              <span className="text-diablo-gold font-bold text-lg">{formatTime(gameTime)}</span>
+      <div className="bg-diablo-medium border-b border-diablo-border p-2 sm:p-3">
+        <div className="container mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs sm:text-sm">
+            <div className="flex gap-3 sm:gap-6 flex-wrap">
+              <div>
+                <span className="text-gray-400">🎮 <span className="hidden sm:inline">Hora del Juego:</span></span>{' '}
+                <span className="text-diablo-gold font-bold text-base sm:text-lg">{formatTime(gameTime)}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">🇨🇱 <span className="hidden sm:inline">Hora Chile:</span></span>{' '}
+                <span className="text-gray-300">{formatTime(chileTime)}</span>
+              </div>
             </div>
-            <div>
-              <span className="text-gray-400">🇨🇱 Hora Chile:</span>{' '}
-              <span className="text-gray-300">{formatTime(chileTime)}</span>
+            <div className="text-gray-400">
+              ⏰ <span className="hidden sm:inline">Tiempo restante: </span>
+              <span className="text-diablo-gold">{hours}h {minutes}m</span>
             </div>
-          </div>
-          <div className="text-gray-400">
-            ⏰ Tiempo restante: <span className="text-diablo-gold">{hours}h {minutes}m</span>
           </div>
         </div>
       </div>
 
       {/* Date Navigation Bar */}
-      <div className="bg-diablo-panel border-b border-diablo-border p-3">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={goToPreviousDay}
-              className="px-3 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
-              title="Día anterior"
-            >
-              ◀
-            </button>
-            <div className="text-center">
-              <div className="text-diablo-gold font-bold text-lg">{selectedDate}</div>
-              <div className="text-xs text-gray-400">
-                {selectedDate === formatDate(getGameTime()) ? 'Hoy' : new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'long' })}
+      <div className="bg-diablo-panel border-b border-diablo-border p-2 sm:p-3">
+        <div className="container mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
+              <button
+                onClick={goToPreviousDay}
+                className="px-2 sm:px-3 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition text-sm sm:text-base"
+                title="Día anterior"
+              >
+                ◀
+              </button>
+              <div className="text-center flex-1 sm:flex-none">
+                <div className="text-diablo-gold font-bold text-sm sm:text-lg">{selectedDate}</div>
+                <div className="text-xs text-gray-400 hidden sm:block">
+                  {selectedDate === formatDate(getGameTime()) ? 'Hoy' : new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'long' })}
+                </div>
               </div>
+              <button
+                onClick={goToNextDay}
+                className="px-2 sm:px-3 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition text-sm sm:text-base"
+                title="Día siguiente"
+              >
+                ▶
+              </button>
+              <button
+                onClick={goToToday}
+                className="px-3 sm:px-4 py-1 bg-diablo-gold text-diablo-dark hover:bg-yellow-500 rounded font-semibold transition ml-1 sm:ml-2 text-sm sm:text-base"
+              >
+                Hoy
+              </button>
             </div>
             <button
-              onClick={goToNextDay}
-              className="px-3 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
-              title="Día siguiente"
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="px-3 sm:px-4 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition flex items-center gap-2 text-sm sm:text-base w-full sm:w-auto justify-center"
             >
-              ▶
-            </button>
-            <button
-              onClick={goToToday}
-              className="px-4 py-1 bg-diablo-gold text-diablo-dark hover:bg-yellow-500 rounded font-semibold transition ml-2"
-            >
-              Hoy
+              📅 <span className="hidden sm:inline">{showCalendar ? 'Ocultar' : 'Ver'} Calendario</span>
+              <span className="sm:hidden">{showCalendar ? 'Ocultar' : 'Calendario'}</span>
             </button>
           </div>
-          <button
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="px-4 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition flex items-center gap-2"
-          >
-            📅 {showCalendar ? 'Ocultar' : 'Ver'} Calendario
-          </button>
         </div>
       </div>
 
@@ -232,15 +247,15 @@ const Dashboard: React.FC = () => {
           {/* Activities List */}
           <div className="lg:col-span-2">
             {/* Filters */}
-            <div className="bg-diablo-panel border border-diablo-border rounded-lg p-4 mb-4">
+            <div className="bg-diablo-panel border border-diablo-border rounded-lg p-3 sm:p-4 mb-4">
               <div className="mb-3">
                 <h4 className="text-xs text-gray-400 mb-2 font-semibold">TIPO DE ACTIVIDAD</h4>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {['todas', 'diaria', 'semanal', 'temporada'].map((f) => (
                     <button
                       key={f}
                       onClick={() => setFilter(f as any)}
-                      className={`px-4 py-2 rounded transition ${
+                      className={`px-3 sm:px-4 py-2 rounded transition text-sm ${
                         filter === f ? 'bg-diablo-gold text-diablo-dark font-semibold' : 'bg-diablo-medium text-gray-300 hover:bg-diablo-medium-hover'
                       }`}
                     >
@@ -251,7 +266,7 @@ const Dashboard: React.FC = () => {
               </div>
               <div>
                 <h4 className="text-xs text-gray-400 mb-2 font-semibold">MODALIDAD</h4>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {[
                     { value: 'todas', icon: '🎮', label: 'Todas' },
                     { value: 'individual', icon: '👤', label: 'Individual' },
@@ -261,12 +276,12 @@ const Dashboard: React.FC = () => {
                     <button
                       key={m.value}
                       onClick={() => setModalidadFilter(m.value as any)}
-                      className={`px-4 py-2 rounded transition flex items-center gap-2 ${
+                      className={`px-2 sm:px-4 py-2 rounded transition flex items-center gap-1 sm:gap-2 text-sm ${
                         modalidadFilter === m.value ? 'bg-diablo-gold text-diablo-dark font-semibold' : 'bg-diablo-medium text-gray-300 hover:bg-diablo-medium-hover'
                       }`}
                     >
                       <span>{m.icon}</span>
-                      <span>{m.label}</span>
+                      <span className="hidden sm:inline">{m.label}</span>
                     </button>
                   ))}
                 </div>
@@ -278,12 +293,12 @@ const Dashboard: React.FC = () => {
               {filteredActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className={`bg-diablo-panel border border-diablo-border rounded-lg p-4 cursor-pointer transition ${
+                  className={`bg-diablo-panel border border-diablo-border rounded-lg p-3 sm:p-4 cursor-pointer transition ${
                     progress.get(activity.id) ? 'opacity-60 bg-green-900/20' : 'hover:border-diablo-gold'
                   }`}
                   onClick={() => setSelectedActivity(activity)}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4">
                     <input
                       type="checkbox"
                       checked={progress.get(activity.id) || false}
@@ -291,22 +306,27 @@ const Dashboard: React.FC = () => {
                         e.stopPropagation();
                         handleToggleProgress(activity.id);
                       }}
-                      className="w-5 h-5 cursor-pointer"
+                      className="w-5 h-5 cursor-pointer mt-1 flex-shrink-0"
                     />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className={getPriorityBadgeClass(activity.prioridad)}>{activity.prioridad}</span>
-                        <span className="text-gray-400 text-xs">({activity.tipo})</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start sm:items-center gap-2 mb-2 flex-wrap">
+                        <span className={`${getPriorityBadgeClass(activity.prioridad)} text-xs whitespace-nowrap`}>{activity.prioridad}</span>
+                        <span className="text-gray-400 text-xs whitespace-nowrap">({activity.tipo})</span>
                         {activity.modo && (
-                          <span className="px-2 py-0.5 rounded text-xs bg-diablo-medium text-gray-300 border border-diablo-border">
-                            {activity.modo === 'individual' && '👤 Individual'}
-                            {activity.modo === 'grupal' && '👥 Grupal'}
-                            {activity.modo === 'ambas' && '⚔️ Ambas'}
+                          <span className="px-2 py-0.5 rounded text-xs bg-diablo-medium text-gray-300 border border-diablo-border whitespace-nowrap">
+                            {activity.modo === 'individual' && '👤'}
+                            {activity.modo === 'grupal' && '👥'}
+                            {activity.modo === 'ambas' && '⚔️'}
+                            <span className="hidden sm:inline ml-1">
+                              {activity.modo === 'individual' && 'Individual'}
+                              {activity.modo === 'grupal' && 'Grupal'}
+                              {activity.modo === 'ambas' && 'Ambas'}
+                            </span>
                           </span>
                         )}
-                        <h3 className="text-diablo-gold-light font-semibold">{activity.nombre}</h3>
                       </div>
-                      <p className="text-gray-400 text-sm">⏱ {activity.tiempo_aprox}</p>
+                      <h3 className="text-diablo-gold-light font-semibold text-sm sm:text-base mb-1 break-words">{activity.nombre}</h3>
+                      <p className="text-gray-400 text-xs sm:text-sm">⏱ {activity.tiempo_aprox}</p>
                     </div>
                   </div>
                 </div>
@@ -314,9 +334,10 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Detail Panel */}
+          {/* Detail Panel - Desktop Sidebar / Mobile Modal */}
           <div className="lg:col-span-1">
-            <div className="bg-diablo-panel border border-diablo-border rounded-lg p-6 sticky top-6">
+            {/* Desktop - Sticky Sidebar */}
+            <div className="hidden lg:block bg-diablo-panel border border-diablo-border rounded-lg p-6 sticky top-6">
               {selectedActivity ? (
                 <>
                   <h2 className="text-2xl font-bold text-diablo-gold mb-4">{selectedActivity.nombre}</h2>
@@ -330,7 +351,7 @@ const Dashboard: React.FC = () => {
                     {selectedActivity.modo && (
                       <div>
                         <h4 className="text-diablo-gold-light font-semibold mb-1">Modalidad</h4>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="px-3 py-1 rounded bg-diablo-medium border border-diablo-border">
                             {selectedActivity.modo === 'individual' && '👤 Individual'}
                             {selectedActivity.modo === 'grupal' && '👥 Grupal'}
@@ -369,6 +390,64 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Mobile - Modal */}
+            {selectedActivity && (
+              <div className="lg:hidden fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                <div className="bg-diablo-panel border-t-2 sm:border-2 border-diablo-border rounded-t-2xl sm:rounded-lg w-full sm:max-w-2xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+                  <div className="sticky top-0 bg-diablo-panel border-b border-diablo-border p-4 flex justify-between items-start">
+                    <h2 className="text-xl font-bold text-diablo-gold pr-8">{selectedActivity.nombre}</h2>
+                    <button
+                      onClick={() => setSelectedActivity(null)}
+                      className="text-gray-400 hover:text-diablo-gold text-2xl leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4 text-gray-300">
+                    <div>
+                      <h4 className="text-diablo-gold-light font-semibold mb-1 text-sm">Prioridad</h4>
+                      <span className={getPriorityBadgeClass(selectedActivity.prioridad)}>
+                        {selectedActivity.prioridad}
+                      </span>
+                    </div>
+                    {selectedActivity.modo && (
+                      <div>
+                        <h4 className="text-diablo-gold-light font-semibold mb-1 text-sm">Modalidad</h4>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-3 py-1 rounded bg-diablo-medium border border-diablo-border text-sm">
+                            {selectedActivity.modo === 'individual' && '👤 Individual'}
+                            {selectedActivity.modo === 'grupal' && '👥 Grupal'}
+                            {selectedActivity.modo === 'ambas' && '⚔️ Ambas'}
+                          </span>
+                          {selectedActivity.preferencia && selectedActivity.modo === 'ambas' && (
+                            <span className="text-xs text-gray-400">
+                              (preferencia: {selectedActivity.preferencia === 'individual' ? '👤' : '👥'} {selectedActivity.preferencia})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-diablo-gold-light font-semibold mb-1 text-sm">Tiempo</h4>
+                      <p className="text-sm">{selectedActivity.tiempo_aprox}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-diablo-gold-light font-semibold mb-1 text-sm">Recompensas</h4>
+                      <p className="text-sm">{selectedActivity.recompensas}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-diablo-gold-light font-semibold mb-1 text-sm">Mejora</h4>
+                      <p className="text-sm">{selectedActivity.mejora}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-diablo-gold-light font-semibold mb-1 text-sm">Detalle</h4>
+                      <p className="text-sm">{selectedActivity.detalle}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
