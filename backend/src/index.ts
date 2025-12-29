@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth.routes';
 import activityRoutes from './routes/activity.routes';
@@ -15,9 +16,13 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.BACKEND_PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for frontend assets
+  crossOriginEmbedderPolicy: false
+}));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true
@@ -26,7 +31,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/progress', progressRoutes);
@@ -36,6 +41,17 @@ app.use('/api/events', eventRoutes);
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Diablo Immortal Checklist API is running' });
 });
+
+// Serve static files from frontend in production
+if (isProduction) {
+  const frontendPath = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(frontendPath));
+  
+  // Handle SPA routing - send all non-API requests to index.html
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
 
 // Error handling
 app.use(errorHandler);
