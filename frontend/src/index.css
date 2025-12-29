@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-diablo-dark text-gray-200;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-diablo-gold hover:bg-diablo-gold-light text-diablo-dark font-bold py-2 px-4 rounded transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-diablo-red hover:bg-diablo-red-flame text-white font-bold py-2 px-4 rounded transition-colors;
+  }
+  
+  .priority-s-plus {
+    @apply bg-gradient-to-r from-red-600 to-orange-600 text-white;
+  }
+  
+  .priority-s {
+    @apply bg-gradient-to-r from-orange-500 to-yellow-500 text-gray-900;
+  }
+  
+  .priority-a-plus {
+    @apply bg-gradient-to-r from-yellow-400 to-green-400 text-gray-900;
+  }
+  
+  .priority-a {
+    @apply bg-green-500 text-white;
+  }
+  
+  .priority-b-plus {
+    @apply bg-blue-500 text-white;
+  }
+  
+  .priority-b {
+    @apply bg-blue-600 text-white;
+  }
+  
+  .priority-c {
+    @apply bg-gray-500 text-white;
+  }
+}
