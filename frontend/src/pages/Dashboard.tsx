@@ -6,6 +6,7 @@ import { eventService } from '../services/event.service';
 import { Activity, UserProgress, UpcomingEvent } from '../types';
 import { formatDate, formatTime, getGameTime, getChileTime, getTimeUntilReset, formatMinutesUntil } from '../utils/timeUtils';
 import { getPriorityBadgeClass } from '../utils/priorityUtils';
+import Calendar from '../components/Calendar';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -16,6 +17,8 @@ const Dashboard: React.FC = () => {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [gameTime, setGameTime] = useState(getGameTime());
   const [chileTime, setChileTime] = useState(getChileTime());
+  const [selectedDate, setSelectedDate] = useState(formatDate(getGameTime()));
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const loadActivities = async () => {
     try {
@@ -49,9 +52,8 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    const currentDate = formatDate(getGameTime());
     loadActivities();
-    loadProgress(currentDate);
+    loadProgress(selectedDate);
     loadEvents();
 
     // Update time every minute
@@ -63,13 +65,40 @@ const Dashboard: React.FC = () => {
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedDate]);
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    loadProgress(date);
+    setShowCalendar(false);
+  };
+
+  const goToPreviousDay = () => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() - 1);
+    const newDate = formatDate(date);
+    setSelectedDate(newDate);
+    loadProgress(newDate);
+  };
+
+  const goToNextDay = () => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() + 1);
+    const newDate = formatDate(date);
+    setSelectedDate(newDate);
+    loadProgress(newDate);
+  };
+
+  const goToToday = () => {
+    const today = formatDate(getGameTime());
+    setSelectedDate(today);
+    loadProgress(today);
+  };
 
   const handleToggleProgress = async (activityId: string) => {
     const currentStatus = progress.get(activityId) || false;
-    const currentDate = formatDate(getGameTime());
     try {
-      await progressService.update(activityId, !currentStatus, currentDate);
+      await progressService.update(activityId, !currentStatus, selectedDate);
       setProgress(new Map(progress.set(activityId, !currentStatus)));
     } catch (error) {
       console.error('Error updating progress:', error);
@@ -114,6 +143,46 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Date Navigation Bar */}
+      <div className="bg-diablo-panel border-b border-diablo-border p-3">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goToPreviousDay}
+              className="px-3 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
+              title="Día anterior"
+            >
+              ◀
+            </button>
+            <div className="text-center">
+              <div className="text-diablo-gold font-bold text-lg">{selectedDate}</div>
+              <div className="text-xs text-gray-400">
+                {selectedDate === formatDate(getGameTime()) ? 'Hoy' : new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'long' })}
+              </div>
+            </div>
+            <button
+              onClick={goToNextDay}
+              className="px-3 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
+              title="Día siguiente"
+            >
+              ▶
+            </button>
+            <button
+              onClick={goToToday}
+              className="px-4 py-1 bg-diablo-gold text-diablo-dark hover:bg-yellow-500 rounded font-semibold transition ml-2"
+            >
+              Hoy
+            </button>
+          </div>
+          <button
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="px-4 py-1 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition flex items-center gap-2"
+          >
+            📅 {showCalendar ? 'Ocultar' : 'Ver'} Calendario
+          </button>
+        </div>
+      </div>
+
       {/* Events Panel */}
       <div className="bg-diablo-medium border-b border-diablo-border p-4">
         <div className="container mx-auto">
@@ -139,6 +208,17 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="container mx-auto p-6">
+        {/* Calendar Section */}
+        {showCalendar && (
+          <div className="mb-6">
+            <Calendar
+              onDateSelect={handleDateSelect}
+              selectedDate={selectedDate}
+              totalActivities={activities.length}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Activities List */}
           <div className="lg:col-span-2">
