@@ -89,6 +89,8 @@ npm run db:seed
 
 ## 🎮 Ejecutar la Aplicación
 
+### Desarrollo Local
+
 Desde la carpeta `Web`, ejecuta un solo comando que levantará ambos servidores:
 
 ```bash
@@ -98,6 +100,24 @@ npm run dev
 Esto iniciará:
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3000
+
+### 🌐 Acceso por Red Local
+
+Para acceder desde otros dispositivos en tu red local (móviles, tablets, otras PCs):
+
+#### Opción 1: Script Automático (Recomendado)
+```bash
+npm run network:start
+```
+
+#### Opción 2: Ver tu IP
+```bash
+npm run network:info
+```
+
+Luego accede desde otro dispositivo: `http://<tu-ip>:5173`
+
+**📖 Documentación completa:** Ver [INICIO_RAPIDO_RED.md](INICIO_RAPIDO_RED.md) o [NETWORK_ACCESS.md](NETWORK_ACCESS.md)
 
 ## 📱 Uso de la Aplicación
 

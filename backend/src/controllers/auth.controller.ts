@@ -48,6 +48,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       data: { user, token }
     });
   } catch (error) {
+    console.error('❌ Register error:', error);
     return next(error);
   }
 };
@@ -59,15 +60,27 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { email, password }: UserLogin = req.body;
+    // Aceptar tanto email como username en el campo de login
+    const { email, username, password }: any = req.body;
+    const loginIdentifier = email || username;
+    
+    console.log(`🔑 Login attempt for: ${loginIdentifier}`);
+
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Username/email and password are required' 
+      });
+    }
 
     // Find user by email or username
     const result = await pool.query(
       'SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1 OR username = $1',
-      [email]
+      [loginIdentifier]
     );
 
     if (result.rows.length === 0) {
+      console.log(`❌ User not found: ${loginIdentifier}`);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
@@ -76,6 +89,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // Verify password
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
+      console.log(`❌ Invalid password for: ${loginIdentifier}`);
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
@@ -89,11 +103,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // Remove password from response
     const { password_hash, ...userWithoutPassword } = user;
 
+    console.log(`✅ Login successful for: ${loginIdentifier}`);
     return res.json({
       success: true,
       data: { user: userWithoutPassword, token }
     });
   } catch (error) {
+    console.error('❌ Login error:', error);
     return next(error);
   }
 };

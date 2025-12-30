@@ -15,8 +15,14 @@ import { initializeDatabase } from './database/init';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.BACKEND_PORT || 3000;
+const PORT = parseInt(process.env.BACKEND_PORT || '3000', 10);
+const HOST = process.env.BACKEND_HOST || '0.0.0.0';
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Configure CORS to accept multiple origins
+const corsOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+  : ['http://localhost:5173'];
 
 // Middleware
 app.use(helmet({
@@ -24,12 +30,36 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list or matches pattern
+    if (corsOrigins.includes(origin) || 
+        origin.match(/^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/) ||
+        origin.match(/^https?:\/\/localhost/) ||
+        origin.match(/^https?:\/\/127\.0\.0\.1/)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS: Origin ${origin}`);
+      callback(null, true); // En desarrollo, permitir todos
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight request por 10 minutos
 }));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Debug middleware - log all requests
+app.use((req, _res, next) => {
+  console.log(`📨 ${req.method} ${req.path} from ${req.get('origin') || 'no origin'}`);
+  next();
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -62,9 +92,15 @@ async function startServer() {
     console.log('🔍 Initializing database...');
     await initializeDatabase();
     
-    app.listen(PORT, () => {
-      console.log(`🔥 Backend server running on http://localhost:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`🔥 Backend server running`);
+      console.log(`📍 Local:    http://localhost:${PORT}`);
+      console.log(`📍 Network:  http://<your-ip>:${PORT}`);
       console.log(`⚔️  Diablo Immortal Checklist API ready`);
+      console.log(`\n💡 Para acceder desde otra máquina:`);
+      console.log(`   1. Encuentra tu IP local con: ipconfig (Windows) o ifconfig (Mac/Linux)`);
+      console.log(`   2. Accede desde: http://<tu-ip>:${PORT}`);
+      console.log(`   3. Asegúrate de que el firewall permita conexiones en el puerto ${PORT}\n`);
     });
   } catch (error) {
     console.error('❌ Failed to initialize database:', error);

@@ -99,11 +99,23 @@ const Dashboard: React.FC = () => {
 
   const handleToggleProgress = async (activityId: string) => {
     const currentStatus = progress.get(activityId) || false;
+    const newStatus = !currentStatus;
+    
+    // Update optimistically
+    const newProgress = new Map(progress);
+    newProgress.set(activityId, newStatus);
+    setProgress(newProgress);
+    
     try {
-      await progressService.update(activityId, !currentStatus, selectedDate);
-      setProgress(new Map(progress.set(activityId, !currentStatus)));
+      await progressService.update(activityId, newStatus, selectedDate);
+      console.log(`✅ Progress updated for ${activityId}: ${newStatus}`);
     } catch (error) {
-      console.error('Error updating progress:', error);
+      console.error('❌ Error updating progress:', error);
+      // Revert on error
+      const revertProgress = new Map(progress);
+      revertProgress.set(activityId, currentStatus);
+      setProgress(revertProgress);
+      alert('Error al actualizar el progreso. Por favor, intenta de nuevo.');
     }
   };
 
@@ -442,24 +454,51 @@ const Dashboard: React.FC = () => {
               {filteredActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className={`bg-diablo-panel border rounded-lg p-4 cursor-pointer transition-all ${
+                  className={`bg-diablo-panel border rounded-lg transition-all ${
                     progress.get(activity.id) 
                       ? 'opacity-70 bg-green-900/20 border-green-700/50' 
                       : 'border-diablo-border hover:border-diablo-gold hover:shadow-lg hover:shadow-diablo-gold/20'
                   }`}
-                  onClick={() => setSelectedActivity(activity)}
                 >
-                  <div className="flex items-start gap-4">
-                    <input
-                      type="checkbox"
-                      checked={progress.get(activity.id) || false}
-                      onChange={(e) => {
+                  <div className="flex items-start gap-3 p-4">
+                    {/* Área del checkbox más grande y moderna */}
+                    <button
+                      type="button"
+                      className="flex items-center justify-center p-2 -m-2 cursor-pointer rounded-lg hover:bg-diablo-medium/30 transition-colors active:scale-95 touch-manipulation"
+                      onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         handleToggleProgress(activity.id);
                       }}
-                      className="w-5 h-5 cursor-pointer mt-1 flex-shrink-0 accent-diablo-gold"
-                    />
-                    <div className="flex-1 min-w-0">
+                      aria-label={progress.get(activity.id) ? 'Marcar como no completada' : 'Marcar como completada'}
+                    >
+                      <div className="relative w-7 h-7">
+                        <div
+                          className={`w-7 h-7 rounded-md border-2 transition-all duration-200 flex items-center justify-center ${
+                            progress.get(activity.id)
+                              ? 'bg-diablo-gold border-diablo-gold'
+                              : 'bg-diablo-medium border-diablo-border'
+                          }`}
+                        >
+                          {progress.get(activity.id) && (
+                            <svg 
+                              className="w-5 h-5 text-diablo-dark"
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                              strokeWidth={3}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                    {/* Contenido de la actividad - clickeable para abrir detalles */}
+                    <div 
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => setSelectedActivity(activity)}
+                    >
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className={`${getPriorityBadgeClass(activity.prioridad)} text-xs px-2 py-0.5 rounded`}>
                           {activity.prioridad}

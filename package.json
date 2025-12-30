@@ -5,13 +5,16 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:network": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev",
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ..",
     "build": "cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build && cd ..",
     "start": "cd backend && npm start",
     "db:migrate": "cd backend && npm run db:migrate",
-    "db:seed": "cd backend && npm run db:seed"
+    "db:seed": "cd backend && npm run db:seed",
+    "network:start": "powershell -ExecutionPolicy Bypass -File .\\start-network.ps1",
+    "network:info": "powershell -Command \"Write-Host '🌐 IP Local:' -ForegroundColor Cyan; (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -ne '127.0.0.1' } | Select-Object -First 1).IPAddress; Write-Host '📱 Acceso: http://<IP>:5173' -ForegroundColor Green\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

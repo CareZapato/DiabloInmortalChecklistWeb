@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Conexión - Diablo Checklist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        h1 {
+            color: #d4af37;
+        }
+        .test-box {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: #d4af37;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #f0c840;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #1a3a1a;
+            border: 1px solid #2d5a2d;
+            color: #4ade80;
+        }
+        .error {
+            background: #3a1a1a;
+            border: 1px solid #5a2d2d;
+            color: #f87171;
+        }
+        .info {
+            background: #1a2a3a;
+            border: 1px solid #2d3a5a;
+            color: #60a5fa;
+        }
+        input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #333;
+            color: #fff;
+            width: 200px;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Test de Conexión - Diablo Checklist</h1>
+    
+    <div class="test-box">
+        <h2>Configuración</h2>
+        <label>
+            IP del Servidor:
+            <input type="text" id="serverIP" placeholder="192.168.1.158" value="localhost">
+        </label>
+        <label>
+            Puerto Backend:
+            <input type="text" id="backendPort" placeholder="3000" value="3000">
+        </label>
+        <label>
+            Puerto Frontend:
+            <input type="text" id="frontendPort" placeholder="5173" value="5173">
+        </label>
+    </div>
+
+    <div class="test-box">
+        <h2>1. Test de Salud del Backend</h2>
+        <button onclick="testBackendHealth()">🔍 Probar Backend</button>
+        <div id="backendResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>2. Test de CORS</h2>
+        <button onclick="testCORS()">🌐 Probar CORS</button>
+        <div id="corsResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>3. Test de Login</h2>
+        <div>
+            <label>
+                Usuario: <input type="text" id="username" value="demo" placeholder="demo">
+            </label>
+            <label>
+                Contraseña: <input type="password" id="password" value="demo123" placeholder="demo123">
+            </label>
+        </div>
+        <button onclick="testLogin()">🔐 Probar Login</button>
+        <div id="loginResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>4. Test de Actividades (Requiere Login)</h2>
+        <button onclick="testActivities()">📋 Probar Actividades</button>
+        <div id="activitiesResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>5. Test de Progreso (Requiere Login)</h2>
+        <button onclick="testProgress()">✅ Probar Progreso</button>
+        <div id="progressResult" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        function getBaseURL() {
+            const ip = document.getElementById('serverIP').value || 'localhost';
+            const port = document.getElementById('backendPort').value || '3000';
+            return `http://${ip}:${port}`;
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        async function testBackendHealth() {
+            const baseURL = getBaseURL();
+            showResult('backendResult', '🔄 Conectando...', 'info');
+            
+            try {
+                const response = await fetch(`${baseURL}/api/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('backendResult', 
+                        `✅ Backend conectado!\n\nStatus: ${data.status}\nMessage: ${data.message}\n\nURL: ${baseURL}/api/health`, 
+                        'success'
+                    );
+                } else {
+                    showResult('backendResult', 
+                        `❌ Error en la respuesta\n\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('backendResult', 
+                    `❌ Error de conexión\n\n${error.message}\n\nAsegúrate de que:\n1. El backend esté corriendo\n2. El firewall permita el puerto ${document.getElementById('backendPort').value}\n3. La IP sea correcta`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testCORS() {
+            const baseURL = getBaseURL();
+            showResult('corsResult', '🔄 Probando CORS...', 'info');
+            
+            try {
+                const response = await fetch(`${baseURL}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const corsHeaders = {
+                        'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                        'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials'),
+                        'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    };
+                    
+                    showResult('corsResult', 
+                        `✅ CORS configurado correctamente!\n\nHeaders:\n${JSON.stringify(corsHeaders, null, 2)}`, 
+                        'success'
+                    );
+                } else {
+                    showResult('corsResult', `❌ Error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('corsResult', 
+                    `❌ Error de CORS\n\n${error.message}\n\nEsto podría indicar un problema de CORS.`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testLogin() {
+            const baseURL = getBaseURL();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            showResult('loginResult', '🔄 Intentando login...', 'info');
+            
+            try {
+                const response = await fetch(`${baseURL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    authToken = data.data.token;
+                    showResult('loginResult', 
+                        `✅ Login exitoso!\n\nUsuario: ${data.data.user.username}\nToken guardado para próximas pruebas`, 
+                        'success'
+                    );
+                } else {
+                    showResult('loginResult', 
+                        `❌ Login fallido\n\nStatus: ${response.status}\nMessage: ${data.message || 'Error desconocido'}\n\nResponse: ${JSON.stringify(data, null, 2)}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('loginResult', 
+                    `❌ Error en login\n\n${error.message}\n\nVerifica que el backend esté corriendo y que CORS esté bien configurado.`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testActivities() {
+            if (!authToken) {
+                showResult('activitiesResult', '❌ Debes hacer login primero', 'error');
+                return;
+            }
+            
+            const baseURL = getBaseURL();
+            showResult('activitiesResult', '🔄 Cargando actividades...', 'info');
+            
+            try {
+                const response = await fetch(`${baseURL}/api/activities`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult('activitiesResult', 
+                        `✅ Actividades cargadas!\n\nTotal: ${data.data.length} actividades\n\nPrimeras 3:\n${JSON.stringify(data.data.slice(0, 3), null, 2)}`, 
+                        'success'
+                    );
+                } else {
+                    showResult('activitiesResult', 
+                        `❌ Error al cargar actividades\n\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('activitiesResult', 
+                    `❌ Error\n\n${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testProgress() {
+            if (!authToken) {
+                showResult('progressResult', '❌ Debes hacer login primero', 'error');
+                return;
+            }
+            
+            const baseURL = getBaseURL();
+            const today = new Date().toISOString().split('T')[0];
+            showResult('progressResult', '🔄 Cargando progreso...', 'info');
+            
+            try {
+                const response = await fetch(`${baseURL}/api/progress/date/${today}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const completed = data.data.filter(p => p.is_completed).length;
+                    showResult('progressResult', 
+                        `✅ Progreso cargado!\n\nFecha: ${today}\nTotal: ${data.data.length} actividades\nCompletadas: ${completed}\n\nDetalle:\n${JSON.stringify(data.data.slice(0, 5), null, 2)}`, 
+                        'success'
+                    );
+                } else {
+                    showResult('progressResult', 
+                        `❌ Error al cargar progreso\n\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('progressResult', 
+                    `❌ Error\n\n${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        // Auto-detectar IP local
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const serverIP = urlParams.get('ip');
+            if (serverIP) {
+                document.getElementById('serverIP').value = serverIP;
+            }
+            
+            console.log('🔥 Test de conexión cargado');
+            console.log('💡 Cambia la IP del servidor si accedes desde otra máquina');
+        };
+    </script>
+</body>
+</html>
