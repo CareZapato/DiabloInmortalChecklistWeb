@@ -4,7 +4,23 @@ import pool from '../config/database';
 export const getAllActivities = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM activities 
+      `SELECT 
+         a.*,
+         COALESCE(
+           json_agg(
+             json_build_object(
+               'id', r.id,
+               'nombre', r.nombre,
+               'descripcion', r.descripcion,
+               'cantidad', ar.cantidad
+             ) ORDER BY r.nombre
+           ) FILTER (WHERE r.id IS NOT NULL),
+           '[]'::json
+         ) as rewards
+       FROM activities a
+       LEFT JOIN activity_rewards ar ON a.id = ar.activity_id
+       LEFT JOIN rewards r ON ar.reward_id = r.id
+       GROUP BY a.id
        ORDER BY 
          CASE tipo WHEN 'diaria' THEN 1 WHEN 'semanal' THEN 2 WHEN 'temporada' THEN 3 END,
          CASE prioridad 
@@ -31,7 +47,27 @@ export const getActivityById = async (req: Request, res: Response, next: NextFun
   try {
     const { id } = req.params;
 
-    const result = await pool.query('SELECT * FROM activities WHERE id = $1', [id]);
+    const result = await pool.query(
+      `SELECT 
+         a.*,
+         COALESCE(
+           json_agg(
+             json_build_object(
+               'id', r.id,
+               'nombre', r.nombre,
+               'descripcion', r.descripcion,
+               'cantidad', ar.cantidad
+             ) ORDER BY r.nombre
+           ) FILTER (WHERE r.id IS NOT NULL),
+           '[]'::json
+         ) as rewards
+       FROM activities a
+       LEFT JOIN activity_rewards ar ON a.id = ar.activity_id
+       LEFT JOIN rewards r ON ar.reward_id = r.id
+       WHERE a.id = $1
+       GROUP BY a.id`,
+      [id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Activity not found' });

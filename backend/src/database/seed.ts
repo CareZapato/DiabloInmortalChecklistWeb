@@ -365,23 +365,17 @@ const seedDatabase = async () => {
         horarios: ['08:00', '12:00', '18:00', '22:00'],
         duracion_minutos: 60,
         descripcion: 'Evento PvP 8v8. Las 3 primeras partidas del día otorgan recompensas mejoradas.',
-        tipo: 'pvp'
+        tipo: 'pvp',
+        recompensas: ['Puntos de batalla', 'Equipo de alta calidad']
       },
       {
-        id: 'ancient_nightmare',
-        nombre: 'Pesadilla Ancestral',
-        horarios: ['12:00', '20:30', '22:30'],
-        duracion_minutos: 30,
-        descripcion: 'Jefe mundial. Aparece en zonas específicas. Recompensas: legendarios, materiales.',
-        tipo: 'world_event'
-      },
-      {
-        id: 'demonic_gates',
-        nombre: 'Puertas Demoníacas',
+        id: 'haunted_carriage',
+        nombre: 'Carruaje Poseído',
         horarios: ['12:00', '20:30', '22:00'],
         duracion_minutos: 30,
-        descripcion: 'Evento grupal. Defiende contra oleadas de demonios para obtener recompensas.',
-        tipo: 'world_event'
+        descripcion: 'Escolta el carruaje hasta su destino mientras defiendes contra oleadas de enemigos.',
+        tipo: 'world_event',
+        recompensas: ['Equipo de alta calidad', 'Oro', 'Experiencia (XP)']
       },
       {
         id: 'vault_raid',
@@ -389,7 +383,8 @@ const seedDatabase = async () => {
         horarios: ['12:00', '19:00'],
         duracion_minutos: 30,
         descripcion: 'Evento de facción. Asalta la cámara de la facción contraria para obtener recompensas.',
-        tipo: 'faction'
+        tipo: 'faction',
+        recompensas: ['Equipo de alta calidad', 'Oro', 'Experiencia (XP)']
       },
       {
         id: 'shadow_assembly',
@@ -397,21 +392,32 @@ const seedDatabase = async () => {
         horarios: ['19:00'],
         duracion_minutos: 60,
         descripcion: 'Evento exclusivo de Sombras. Coordina con tu clan para actividades especiales.',
-        tipo: 'faction'
+        tipo: 'faction',
+        recompensas: ['Equipo de alta calidad', 'Oro', 'Experiencia (XP)']
+      },
+      {
+        id: 'ancient_arena',
+        nombre: 'Arena Ancestral',
+        horarios: ['21:30'],
+        duracion_minutos: 30,
+        descripcion: 'Combate PvP en la arena ancestral. Demuestra tu habilidad contra otros jugadores.',
+        tipo: 'pvp',
+        recompensas: ['Equipo de alta calidad', 'Oro', 'Experiencia (XP)']
       }
     ];
 
     for (const event of events) {
       await client.query(
-        `INSERT INTO scheduled_events (id, nombre, horarios, duracion_minutos, descripcion, tipo) 
-         VALUES ($1, $2, $3, $4, $5, $6) 
+        `INSERT INTO scheduled_events (id, nombre, horarios, duracion_minutos, descripcion, tipo, recompensas) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) 
          ON CONFLICT (id) DO UPDATE SET
            nombre = EXCLUDED.nombre,
            horarios = EXCLUDED.horarios,
            duracion_minutos = EXCLUDED.duracion_minutos,
            descripcion = EXCLUDED.descripcion,
-           tipo = EXCLUDED.tipo`,
-        [event.id, event.nombre, event.horarios, event.duracion_minutos, event.descripcion, event.tipo]
+           tipo = EXCLUDED.tipo,
+           recompensas = EXCLUDED.recompensas`,
+        [event.id, event.nombre, event.horarios, event.duracion_minutos, event.descripcion, event.tipo, event.recompensas]
       );
     }
     console.log(`✅ Seeded ${events.length} scheduled events`);

@@ -109,4 +109,63 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* Animación personalizada para eventos activos */
+  @keyframes event-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-event-pulse {
+    animation: event-pulse 2s ease-in-out infinite;
+  }
+
+  /* Animación de deslizamiento suave */
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+
+  /* Gradiente animado para barra de progreso */
+  @keyframes progress-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-progress-shimmer {
+    background-size: 200% 100%;
+    animation: progress-shimmer 3s ease-in-out infinite;
+  }
+
+  /* Custom scrollbar para listas de filtros */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-diablo-medium/30 rounded;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-diablo-gold/50 rounded hover:bg-diablo-gold;
+  }
 }
+

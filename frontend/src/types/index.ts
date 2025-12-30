@@ -3,19 +3,26 @@ export type ActivityPriority = 'S+' | 'S' | 'A+' | 'A' | 'B+' | 'B' | 'C';
 export type ActivityMode = 'individual' | 'grupal' | 'ambas';
 export type ActivityPreference = 'individual' | 'grupal' | null;
 
+export interface Reward {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  cantidad?: number;
+}
+
 export interface Activity {
   id: string;
   nombre: string;
   tipo: ActivityType;
   prioridad: ActivityPriority;
   tiempo_aprox: string;
-  recompensas: string;
   mejora: string;
   detalle: string;
   modo: ActivityMode;
   preferencia: ActivityPreference;
   created_at: string;
   updated_at: string;
+  rewards?: Reward[];
 }
 
 export interface User {
@@ -47,6 +54,7 @@ export interface ScheduledEvent {
   duracion_minutos: number;
   descripcion: string;
   tipo: EventType;
+  rewards?: Reward[];
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +63,9 @@ export interface UpcomingEvent extends ScheduledEvent {
   time: string;
   minutesUntil: number;
   status: 'active' | 'upcoming';
+  previousScheduleTime?: string;
+  minutesSincePrevious?: number;
+  totalMinutesBetweenSchedules?: number;
 }
 
 export interface AuthResponse {

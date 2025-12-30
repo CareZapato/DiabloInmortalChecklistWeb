@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Changelog from './pages/Changelog';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -29,6 +30,14 @@ const App: React.FC = () => {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/changelog"
+        element={
+          <ProtectedRoute>
+            <Changelog />
           </ProtectedRoute>
         }
       />

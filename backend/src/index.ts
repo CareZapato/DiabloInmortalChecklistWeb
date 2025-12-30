@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.routes';
 import activityRoutes from './routes/activity.routes';
 import progressRoutes from './routes/progress.routes';
 import eventRoutes from './routes/event.routes';
+import rewardRoutes from './routes/reward.routes';
 import { initializeDatabase } from './database/init';
 
 // Load environment variables
@@ -66,6 +67,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/rewards', rewardRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

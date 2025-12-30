@@ -1,53 +1,328 @@
 # ⚔️ Diablo Immortal Checklist - Web Application
 
-Aplicación web full-stack para gestionar actividades diarias/semanales/temporada de Diablo Immortal con autenticación de usuarios.
+**Versión:** 0.1.0  
+**Desarrollador:** CareZapato  
+**Fecha:** 30 de diciembre de 2025
 
-## 🚀 Tecnologías
+Aplicación web full-stack para gestionar actividades diarias/semanales/temporada de Diablo Immortal con sistema de recompensas normalizado, eventos programados y autenticación de usuarios.
 
-### Frontend
-- **React 18** con TypeScript
-- **Vite** para desarrollo rápido
-- **TailwindCSS** para estilos (tema Diablo)
-- **React Router** para navegación
-- **Axios** para peticiones HTTP
-- **date-fns** para manejo de fechas
+> 📖 **Sistema de Recompensas:** Ver [REWARDS_SYSTEM_v2.5.md](REWARDS_SYSTEM_v2.5.md) para documentación completa del sistema de recompensas normalizado.
 
-### Backend
-- **Node.js** con **Express** y TypeScript
-- **PostgreSQL** como base de datos
-- **JWT** para autenticación
-- **bcryptjs** para hash de contraseñas
+> 📋 **Cambios recientes:** Ver [CHANGELOG.md](CHANGELOG.md) para el historial completo de versiones.
 
-## 📋 Requisitos Previos
+> 🚀 **Deployment:** Ver [RENDER_DEPLOY.md](RENDER_DEPLOY.md) para instrucciones de despliegue en Render.
 
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
-- **PostgreSQL** >= 14
+---
 
-## 🔧 Instalación
+## 🚀 Inicio Rápido
 
-### 1. Configurar PostgreSQL
+### Requisitos
+- Node.js >= 18.0.0
+- PostgreSQL >= 14
+- npm >= 9.0.0
 
-Primero, crea la base de datos en PostgreSQL:
+## 🔧 Instalación Local
 
+### 1. Clonar repositorio
+```bash
+git clone <tu-repo>
+cd Web
+```
+
+### 2. Configurar PostgreSQL
 ```sql
 CREATE DATABASE "DiabloInmortalChecklist";
 ```
 
-O desde PowerShell:
-```powershell
-psql -U postgres -c "CREATE DATABASE \"DiabloInmortalChecklist\";"
+### 3. Configurar variables de entorno
+
+**Backend** (`backend/.env`):
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/DiabloInmortalChecklist
+BACKEND_PORT=3000
+BACKEND_HOST=0.0.0.0
+JWT_SECRET=tu_secreto_seguro_de_32_caracteres_minimo
+JWT_EXPIRES_IN=7d
+CORS_ORIGIN=http://localhost:5173
 ```
 
-### 2. Instalar dependencias
+**Frontend** (`frontend/.env`):
+```env
+VITE_API_URL=http://localhost:3000/api
+```
 
-Desde la carpeta `Web`, ejecuta:
+### 4. Instalar dependencias y ejecutar
 
 ```bash
-# Instalar dependencias del root
+# Instalar todas las dependencias (root, backend, frontend)
 npm install
 
-# Instalar dependencias del frontend
+# Ejecutar en modo desarrollo (backend + frontend)
+npm run dev
+```
+
+**Acceso:**
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3000
+- API Health: http://localhost:3000/api/activities
+
+---
+
+## 📱 Acceso desde Red Local (Móvil/Tablet)
+
+### 1. Obtener IP local
+```powershell
+# Windows
+ipconfig
+# Buscar IPv4 (ej: 192.168.1.158)
+```
+
+### 2. Configurar CORS
+El backend ya está configurado para aceptar conexiones de red local (regex incluido en CORS).
+
+### 3. Acceder desde dispositivo
+```
+http://192.168.1.158:5173
+```
+
+### 4. Firewall (si es necesario)
+```powershell
+# Permitir puerto 3000 (backend)
+New-NetFirewallRule -DisplayName "Diablo Backend" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow
+
+# Permitir puerto 5173 (frontend)
+New-NetFirewallRule -DisplayName "Diablo Frontend" -Direction Inbound -LocalPort 5173 -Protocol TCP -Action Allow
+```
+
+---
+
+## 🗄️ Base de Datos
+
+### Auto-Restauración
+El backend ejecuta automáticamente en cada inicio:
+1. **Verificación de tablas** → Crea si no existen
+2. **Verificación de datos** → Seed si están vacíos
+
+**Sistema idempotente:** Puede ejecutarse múltiples veces sin problemas.
+
+### Migración Manual (si es necesario)
+```bash
+cd backend
+npm run db:seed
+```
+
+### Estructura
+- **users**: Cuentas de usuario
+- **activities**: 27 actividades del juego (diarias/semanales/temporada)
+- **user_progress**: Registro de completado por fecha
+- **scheduled_events**: 5 eventos programados con horarios
+
+---
+
+## 📊 Características
+
+✅ **Dashboard Interactivo**
+- 27 actividades organizadas por prioridad (S+ a C)
+- Filtros por tipo (diaria/semanal/temporada)
+- Filtros por modalidad (individual/grupal/ambas)
+- Checkbox independiente (no abre modal en móvil)
+
+✅ **Eventos en Tiempo Real**
+- 5 eventos programados con horarios del juego
+- Barra de progreso animada
+- Cálculo basado en tiempo transcurrido desde evento anterior
+- Actualización automática cada 60 segundos
+- Offset de tiempo del juego: -2 horas
+
+✅ **Sistema de Progreso**
+- Toggle de completado por actividad/fecha
+- Historial persistente
+- Indicadores visuales por estado
+
+✅ **Autenticación**
+- JWT con sesiones de 7 días
+- Login con email o username
+- Registro de usuarios
+- Protección de rutas
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+Web/
+├── backend/           # API Express + TypeScript
+│   ├── src/
+│   │   ├── controllers/   # Lógica de negocio (activity, event, auth, progress, reward)
+│   │   ├── routes/        # Endpoints API
+│   │   ├── models/        # Tipos TypeScript (Activity, Event, Reward, User, etc.)
+│   │   ├── middleware/    # Auth, Error handling
+│   │   ├── database/      # Init, seed, migrations
+│   │   │   └── migrations/  # Scripts de migración (migrate_rewards_v2.5.ts)
+│   │   └── config/        # Database pool
+│   └── .env
+├── frontend/          # React + Vite + TypeScript
+│   ├── src/
+│   │   ├── pages/         # Dashboard, Login, Register, Changelog
+│   │   ├── components/    # Calendar, etc.
+│   │   ├── contexts/      # AuthContext
+│   │   ├── services/      # API calls (axios)
+│   │   ├── types/         # TypeScript interfaces
+│   │   └── utils/         # Helpers (time, priority)
+│   └── .env
+├── REWARDS_SYSTEM_v2.5.md  # 📖 Documentación sistema de recompensas
+├── CHANGELOG.md            # 📋 Historial de cambios
+├── RENDER_DEPLOY.md        # 🚀 Guía de deployment
+└── README.md               # Este archivo
+```
+
+---
+
+## 🔗 Endpoints API
+
+### Auth
+- `POST /api/auth/register` - Registro
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Usuario actual (requiere JWT)
+
+### Activities
+- `GET /api/activities` - Lista todas las actividades con rewards
+- `GET /api/activities/:id` - Detalle de actividad con rewards
+
+### Events
+- `GET /api/events/upcoming` - Próximos 10 eventos ordenados por tiempo con rewards
+
+### Progress
+- `GET /api/progress/date/:date` - Progreso de fecha (YYYY-MM-DD)
+- `POST /api/progress/toggle` - Toggle completado
+  ```json
+  { "activityId": "daily_gemas_party4", "date": "2025-12-30" }
+  ```
+
+### Rewards (Nuevo en v0.1.0)
+- `GET /api/rewards` - Lista todas las recompensas
+- `GET /api/rewards/:rewardId/activities` - Actividades que otorgan una recompensa
+- `GET /api/rewards/:rewardId/events` - Eventos que otorgan una recompensa
+
+---
+
+## 🎮 Datos del Juego
+
+### Actividades
+- **27 actividades base:** 15 diarias, 8 semanales, 4 de temporada
+- **Sistema de prioridades:** Crítica, Alta, Media, Baja
+- **Modalidades:** Individual, Grupal, Ambas
+
+### Recompensas (Nuevo en v0.1.0)
+- **20 recompensas únicas** con sistema normalizado
+- **31 relaciones actividad-recompensa** con cantidades específicas
+- **14 relaciones evento-recompensa** con cantidades específicas
+- **Filtrado avanzado** por tipo de recompensa
+- Incluye: Gemas, Cimeras, Platino, Brasas, Esencias, Materiales, Legendarios, etc.
+
+### Eventos Programados
+- **5 eventos del día** con horarios múltiples
+- **Barra de progreso animada** que muestra el tiempo transcurrido
+- **Countdown en tiempo real** hasta el próximo evento
+- **Estado visual:** Verde (activo), Amarillo (próximo)
+
+| Evento | Horarios | Tipo |
+|--------|----------|------|
+| Battlefield | 12:00, 20:00 | PvP |
+| Carruaje Poseído | 12:00, 20:00 | World Event |
+| Asalto a la Cámara | 12:00, 20:00 | Faction |
+| Reunión de las Sombras | 18:00, 21:00 | Faction |
+| Arena Ancestral | 14:00, 18:00, 22:00 | PvP |
+
+---
+
+## 🛠️ Scripts Disponibles
+
+### Root
+```bash
+npm run dev          # Backend + Frontend en paralelo
+npm install          # Instala deps de root, backend y frontend
+```
+
+### Backend
+```bash
+cd backend
+npm run dev          # Desarrollo con nodemon
+npm run build        # Compilar TypeScript
+npm start            # Producción (requiere build)
+npm run db:seed      # Seed manual de datos
+```
+
+### Frontend
+```bash
+cd frontend
+npm run dev          # Servidor Vite
+npm run build        # Build para producción
+npm run preview      # Preview del build
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: "Cannot find module"
+```bash
+# Reinstalar dependencias
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Error: "Database connection failed"
+- Verificar PostgreSQL corriendo: `psql -U postgres -c "SELECT 1"`
+- Verificar DATABASE_URL en `.env`
+- Crear BD si no existe
+
+### Error: "CORS blocked"
+- Verificar CORS_ORIGIN en backend `.env`
+- Verificar VITE_API_URL en frontend `.env`
+- Reiniciar ambos servidores
+
+### Frontend no conecta con Backend
+- Verificar backend corriendo en puerto 3000
+- Verificar VITE_API_URL en frontend `.env`
+- Abrir devtools → Network para ver errores
+
+---
+
+## ✨ Características Destacadas v0.1.0
+
+1. **Sistema de recompensas normalizado** con base de datos relacional
+2. **Auto-restore de datos**: Si eliminas tablas, el sistema las recrea automáticamente
+3. **Filtros avanzados** por tipo, modalidad y recompensa
+4. **Eventos en tiempo real** con barra de progreso y countdown
+5. **100% responsive** optimizado para todos los dispositivos
+6. **Timezone correcto** con offset de -2h aplicado consistentemente
+
+---
+
+## 📋 Documentación
+
+- [REWARDS_SYSTEM_v2.5.md](REWARDS_SYSTEM_v2.5.md) - Sistema de recompensas completo
+- [CHANGELOG.md](CHANGELOG.md) - Historial de versiones
+- [RENDER_DEPLOY.md](RENDER_DEPLOY.md) - Guía de deployment
+
+---
+
+## 📄 Licencia
+
+MIT
+
+---
+
+## 👤 Autor
+
+**CareZapato**  
+Diablo Immortal Checklist v0.1.0  
+Diciembre 2025
+
+---
+
+¡Que tus runs sean legendarios! ⚔️🔥
 cd frontend
 npm install
 cd ..
@@ -84,296 +359,7 @@ npm run db:migrate
 ### 5. Poblar la base de datos con actividades y eventos
 
 ```bash
-npm run db:seed
-```
-
-## 🎮 Ejecutar la Aplicación
-
-### Desarrollo Local
-
-Desde la carpeta `Web`, ejecuta un solo comando que levantará ambos servidores:
-
-```bash
-npm run dev
-```
-
-Esto iniciará:
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3000
-
-### 🌐 Acceso por Red Local
-
-Para acceder desde otros dispositivos en tu red local (móviles, tablets, otras PCs):
-
-#### Opción 1: Script Automático (Recomendado)
-```bash
-npm run network:start
-```
-
-#### Opción 2: Ver tu IP
-```bash
-npm run network:info
-```
-
-Luego accede desde otro dispositivo: `http://<tu-ip>:5173`
-
-**📖 Documentación completa:** Ver [INICIO_RAPIDO_RED.md](INICIO_RAPIDO_RED.md) o [NETWORK_ACCESS.md](NETWORK_ACCESS.md)
-
-## 📱 Uso de la Aplicación
-
-### Primera vez
-
-1. Abre http://localhost:5173
-2. Haz clic en "Regístrate aquí"
-3. Crea tu cuenta con:
-   - Nombre de usuario (mínimo 3 caracteres)
-   - Email válido
-   - Contraseña (mínimo 6 caracteres)
-4. Automáticamente serás redirigido al dashboard
-
-### Funcionalidades
-
-#### 🎮 Dashboard Principal
-
-- **Hora del Juego**: Muestra la hora del juego (UTC-4, -2 horas respecto a Chile)
-- **Hora de Chile**: Muestra la hora local de Chile
-- **Tiempo restante**: Contador hasta el reset diario (3:00 AM)
-
-#### ⏰ Panel de Eventos
-
-- Muestra los próximos 5 eventos programados
-- Estados:
-  - **Verde (▶)**: Evento activo ahora
-  - **Amarillo (⏱)**: Próximo evento
-- Eventos incluidos:
-  - Campo de Batalla (18:00, 22:00)
-  - Reunión de las Sombras (19:00)
-  - Asalto a la Cámara (19:00)
-  - Puertas Demoníacas (20:30, 22:00)
-
-#### 📋 Lista de Actividades
-
-- **Filtros**: Todas / Diarias / Semanales / Temporada
-- **Prioridades con colores**:
-  - S+: Rojo-Naranja (crítico)
-  - S: Naranja-Amarillo (muy importante)
-  - A+: Amarillo-Verde
-  - A: Verde
-  - B+/B: Azul
-  - C: Gris
-
-- **Checkbox**: Marca como completada (se guarda por usuario y fecha)
-- **Click en actividad**: Ver detalles completos
-
-#### 📝 Panel de Detalles
-
-Al hacer click en una actividad, verás:
-- Nombre completo
-- Prioridad
-- Tiempo aproximado
-- Recompensas
-- Mejoras que aporta
-- Detalles completos de cómo completarla
-
-### Progreso por Usuario
-
-Cada usuario tiene su propio progreso independiente:
-- El progreso se guarda por fecha
-- Puedes ver qué completaste cada día
-- Las actividades semanales se acumulan durante la semana
-
-## 🗄️ Estructura del Proyecto
-
-```
-Web/
-├── package.json          # Scripts root para levantar todo
-├── backend/
-│   ├── src/
-│   │   ├── index.ts      # Servidor Express
-│   │   ├── config/
-│   │   │   └── database.ts
-│   │   ├── models/
-│   │   │   ├── User.ts
-│   │   │   ├── Activity.ts
-│   │   │   ├── UserProgress.ts
-│   │   │   └── ScheduledEvent.ts
-│   │   ├── controllers/
-│   │   │   ├── auth.controller.ts
-│   │   │   ├── activity.controller.ts
-│   │   │   ├── progress.controller.ts
-│   │   │   └── event.controller.ts
-│   │   ├── routes/
-│   │   │   ├── auth.routes.ts
-│   │   │   ├── activity.routes.ts
-│   │   │   ├── progress.routes.ts
-│   │   │   └── event.routes.ts
-│   │   ├── middleware/
-│   │   │   ├── auth.ts
-│   │   │   └── errorHandler.ts
-│   │   └── database/
-│   │       ├── migrate.ts   # Crear tablas
-│   │       └── seed.ts      # Poblar datos
-│   ├── .env
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/
-│   ├── src/
-│   │   ├── main.tsx
-│   │   ├── App.tsx
-│   │   ├── index.css
-│   │   ├── types/
-│   │   │   └── index.ts
-│   │   ├── contexts/
-│   │   │   └── AuthContext.tsx
-│   │   ├── services/
-│   │   │   ├── api.ts
-│   │   │   ├── auth.service.ts
-│   │   │   ├── activity.service.ts
-│   │   │   ├── progress.service.ts
-│   │   │   └── event.service.ts
-│   │   ├── utils/
-│   │   │   ├── timeUtils.ts
-│   │   │   └── priorityUtils.ts
-│   │   └── pages/
-│   │       ├── Login.tsx
-│   │       ├── Register.tsx
-│   │       └── Dashboard.tsx
-│   ├── index.html
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── vite.config.ts
-│   └── tailwind.config.js
-└── README.md
-```
-
-## 🔌 API Endpoints
-
-### Autenticación
-- `POST /api/auth/register` - Registrar usuario
-- `POST /api/auth/login` - Iniciar sesión
-- `GET /api/auth/profile` - Obtener perfil (requiere token)
-
-### Actividades
-- `GET /api/activities` - Listar todas las actividades
-- `GET /api/activities/:id` - Obtener una actividad
-
-### Progreso
-- `GET /api/progress` - Obtener progreso del usuario
-- `GET /api/progress/date/:date` - Progreso de una fecha específica
-- `PUT /api/progress/:activityId` - Actualizar progreso
-
-### Eventos
-- `GET /api/events` - Listar todos los eventos
-- `GET /api/events/upcoming` - Próximos 5 eventos
-
-## 🎨 Tema Visual
-
-La aplicación usa una paleta de colores inspirada en Diablo:
-- **Fondos**: Negros y marrones oscuros (#0a0a0a, #1a1410)
-- **Acentos**: Dorado (#d4af37) y rojo (#8b0000)
-- **Bordes**: Marrones (#3d2817)
-- **Prioridades**: Degradados de colores según importancia
-
-## 🔒 Seguridad
-
-- Contraseñas hasheadas con bcrypt (salt rounds: 10)
-- JWT con expiración de 7 días
-- Tokens almacenados en localStorage
-- Middleware de autenticación en todas las rutas protegidas
-- Validación de inputs con express-validator
-
-## 📊 Base de Datos
-
-### Tablas
-
-1. **users**: Usuarios del sistema
-2. **activities**: Catálogo de actividades del juego
-3. **user_progress**: Progreso de cada usuario por actividad y fecha
-4. **scheduled_events**: Eventos programados con horarios
-
-### Relaciones
-
-- `user_progress.user_id` → `users.id`
-- `user_progress.activity_id` → `activities.id`
-
-## 🛠️ Scripts Disponibles
-
-Desde la carpeta `Web`:
-
-```bash
-npm run dev           # Levantar frontend + backend
-npm run dev:frontend  # Solo frontend
-npm run dev:backend   # Solo backend
-npm run build         # Build de producción
-npm run db:migrate    # Crear tablas
-npm run db:seed       # Poblar datos
-npm run reset-password <username> <nueva-contraseña>  # Resetear contraseña de un usuario
-```
-
-## 🔑 Resetear Contraseña
-
-Si olvidaste tu contraseña o tienes problemas para iniciar sesión, puedes resetearla desde el backend:
-
-```bash
-cd Web/backend
-npm run reset-password tu_usuario 123456
-```
-
-Esto actualizará la contraseña del usuario en la base de datos con el hash correcto.
-
-## 🐛 Troubleshooting
-
-### Error de conexión a PostgreSQL
-
-Verifica que PostgreSQL esté corriendo:
-```powershell
-Get-Service postgresql*
-```
-
-Si no está corriendo:
-```powershell
-Start-Service postgresql-x64-14
-```
-
-### Puerto ya en uso
-
-Si el puerto 3000 o 5173 están ocupados:
-- Cambia `BACKEND_PORT` en `backend/.env`
-- Cambia `server.port` en `frontend/vite.config.ts`
-
-### Error de autenticación
-
-Limpia el localStorage del navegador:
-```javascript
-// En la consola del navegador
-localStorage.clear()
-```
-
-## 📝 Notas
-
-- La aplicación maneja automáticamente la diferencia horaria de -2 horas entre el juego y Chile
-- El reset diario es a las 3:00 AM (hora del juego)
-- Los eventos se actualizan automáticamente cada minuto
-- El progreso semanal se acumula desde el lunes
-
-## 🔮 Próximas Mejoras
-
-- [ ] Navegación de fechas (anterior/siguiente día)
-- [ ] Estadísticas de progreso semanal/mensual
-- [ ] Notificaciones de eventos próximos
-- [ ] Modo oscuro/claro
-- [ ] Export/import de progreso
-- [ ] Recordatorios por email
-
-## 👤 Autor
-
-Versión Web desarrollada en diciembre 2025
-Basada en la aplicación Python original de Diablo Immortal Checklist
-
-## 📄 Licencia
-
-MIT
 
 ---
 
-¡Que tus runs sean legendarios! ⚔️🔥
+�Que tus runs sean legendarios! 

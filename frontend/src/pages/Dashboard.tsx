@@ -1,25 +1,31 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { activityService } from '../services/activity.service';
 import { progressService } from '../services/progress.service';
 import { eventService } from '../services/event.service';
-import { Activity, UserProgress, UpcomingEvent } from '../types';
+import { rewardService } from '../services/reward.service';
+import { Activity, UserProgress, UpcomingEvent, Reward } from '../types';
 import { formatDate, formatTime, getGameTime, getTimeUntilReset, formatMinutesUntil } from '../utils/timeUtils';
 import { getPriorityBadgeClass } from '../utils/priorityUtils';
 import Calendar from '../components/Calendar';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [progress, setProgress] = useState<Map<string, boolean>>(new Map());
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [filter, setFilter] = useState<'todas' | 'diaria' | 'semanal' | 'temporada'>('todas');
   const [modalidadFilter, setModalidadFilter] = useState<'todas' | 'individual' | 'grupal' | 'ambas'>('todas');
+  const [rewardFilter, setRewardFilter] = useState<string>('todas');
+  const [rewards, setRewards] = useState<Reward[]>([]);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [gameTime, setGameTime] = useState(getGameTime());
   const [selectedDate, setSelectedDate] = useState(formatDate(getGameTime()));
   const [showCalendar, setShowCalendar] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showEvents, setShowEvents] = useState(false); // Para móvil, por defecto colapsado
 
   const loadActivities = async () => {
     try {
@@ -52,10 +58,20 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const loadRewards = async () => {
+    try {
+      const data = await rewardService.getAll();
+      setRewards(data);
+    } catch (error) {
+      console.error('Error loading rewards:', error);
+    }
+  };
+
   useEffect(() => {
     loadActivities();
     loadProgress(selectedDate);
     loadEvents();
+    loadRewards();
 
     // Update time every minute
     const interval = setInterval(() => {
@@ -126,6 +142,13 @@ const Dashboard: React.FC = () => {
     // Filter by modalidad
     if (modalidadFilter !== 'todas' && a.modo !== modalidadFilter) return false;
     
+    // Filter by reward
+    if (rewardFilter !== 'todas') {
+      if (!a.rewards || !a.rewards.some(r => r.id === rewardFilter)) {
+        return false;
+      }
+    }
+    
     return true;
   });
 
@@ -141,6 +164,13 @@ const Dashboard: React.FC = () => {
               <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-diablo-gold whitespace-nowrap">
                 ⚔️ <span className="hidden sm:inline">DI Checklist</span>
               </h1>
+              <button
+                onClick={() => navigate('/changelog')}
+                className="text-xs text-gray-500 hover:text-diablo-gold font-mono bg-diablo-medium hover:bg-diablo-medium/70 px-2 py-0.5 rounded transition cursor-pointer"
+                title="Ver changelog"
+              >
+                v0.1.0
+              </button>
               {/* Info de tiempo integrada */}
               <div className="hidden md:flex items-center gap-4">
                 <div className="flex flex-col">
@@ -230,7 +260,7 @@ const Dashboard: React.FC = () => {
                 className="flex-1 sm:flex-none px-3 py-2 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition flex items-center justify-center gap-2 text-sm lg:hidden"
               >
                 🔍 <span>Filtros</span>
-                {(filter !== 'todas' || modalidadFilter !== 'todas') && (
+                {(filter !== 'todas' || modalidadFilter !== 'todas' || rewardFilter !== 'todas') && (
                   <span className="w-2 h-2 bg-diablo-gold rounded-full"></span>
                 )}
               </button>
@@ -248,30 +278,124 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Próximos Eventos - Compacto */}
+        {/* Próximos Eventos - Mejorado con barra de progreso */}
         {events.length > 0 && (
-          <div className="bg-diablo-panel border border-diablo-border rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-diablo-panel border border-diablo-border rounded-lg overflow-hidden mb-6">
+            {/* Header - Clickeable en móvil */}
+            <button
+              onClick={() => setShowEvents(!showEvents)}
+              className="w-full p-4 flex items-center justify-between lg:cursor-default hover:bg-diablo-medium/30 lg:hover:bg-transparent transition-colors"
+            >
               <h3 className="text-sm font-bold text-gray-400 flex items-center gap-2">
                 <span>⏰</span>
                 <span>Próximos Eventos</span>
+                <span className="text-xs text-gray-500">({events.length})</span>
               </h3>
-              <span className="text-xs text-gray-500">{events.length} eventos</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {events.slice(0, 6).map((event, index) => (
-                <div key={index} className="bg-diablo-medium border border-diablo-border rounded-lg px-3 py-2 flex items-center gap-2">
-                  <span className={`text-sm ${event.status === 'active' ? 'text-green-500' : 'text-yellow-500'}`}>
-                    {event.status === 'active' ? '▶' : '⏱'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-diablo-gold font-semibold text-xs truncate">{event.nombre}</div>
-                    <div className="text-gray-400 text-xs">
-                      {event.time} · {formatMinutesUntil(event.minutesUntil)}
+              {/* Indicador de expansión solo en móvil */}
+              <span className="lg:hidden text-gray-400 text-lg transform transition-transform duration-200" style={{ transform: showEvents ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                ▼
+              </span>
+            </button>
+            
+            {/* Contenido - Expandible en móvil, siempre visible en escritorio */}
+            <div className={`${
+              showEvents ? 'block' : 'hidden lg:block'
+            } pb-4 px-4 transition-all duration-300`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {events.slice(0, 8).map((event, index) => {
+                  // Calcular el porcentaje de progreso basado en el tiempo transcurrido desde el horario anterior
+                  let progressPercentage = 0;
+                  
+                  if (event.status === 'active') {
+                    // Evento activo: barra al 100%
+                    progressPercentage = 100;
+                  } else if (event.totalMinutesBetweenSchedules && event.minutesSincePrevious !== undefined) {
+                    // Calcular progreso basado en tiempo transcurrido desde el horario anterior
+                    // Fórmula: (tiempo transcurrido / tiempo total) * 100
+                    progressPercentage = Math.max(0, Math.min(100, 
+                      (event.minutesSincePrevious / event.totalMinutesBetweenSchedules) * 100
+                    ));
+                  } else {
+                    // Fallback: mínimo 5% para que se vea algo
+                    progressPercentage = 5;
+                  }
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className="relative border border-diablo-border rounded-lg overflow-hidden group hover:border-diablo-gold transition-all duration-300 hover:shadow-lg hover:shadow-diablo-gold/20"
+                      title={`${event.nombre} - ${event.status === 'active' ? 'ACTIVO AHORA' : `Comienza en ${formatMinutesUntil(event.minutesUntil)}`}${event.rewards && event.rewards.length > 0 ? `\nRecompensas: ${event.rewards.map(r => r.cantidad ? `${r.nombre} x${r.cantidad}` : r.nombre).join(', ')}` : ''}`}
+                    >
+                      {/* Barra de progreso de fondo - llena todo el ancho del contenedor */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-1000 ease-out ${
+                            event.status === 'active' 
+                              ? 'bg-gradient-to-r from-green-600/50 via-green-500/40 to-green-600/50 animate-progress-shimmer' 
+                              : 'bg-gradient-to-r from-yellow-600/40 via-yellow-500/30 to-yellow-600/40'
+                          }`}
+                          style={{ 
+                            width: `${progressPercentage}%`,
+                            minWidth: progressPercentage > 0 ? '2%' : '0%'
+                          }}
+                        >
+                          {/* Overlay de brillo para eventos activos */}
+                          {event.status === 'active' && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400/20 to-transparent animate-progress-shimmer" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Contenido del evento */}
+                      <div className="relative px-3 py-2.5 flex items-center gap-2.5">
+                        {/* Icono de estado con animación */}
+                        <div className="flex-shrink-0">
+                          <span className={`text-base ${
+                            event.status === 'active' 
+                              ? 'text-green-400 animate-pulse' 
+                              : 'text-yellow-400'
+                          }`}>
+                            {event.status === 'active' ? '▶' : '⏱'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="text-diablo-gold font-semibold text-xs truncate mb-0.5">
+                            {event.nombre}
+                          </div>
+                          <div className="text-gray-300 text-xs flex items-center gap-1.5">
+                            <span className="font-mono">{event.time}</span>
+                            <span className="text-gray-500">·</span>
+                            <span className={event.status === 'active' ? 'text-green-400 font-semibold' : 'text-gray-400'}>
+                              {formatMinutesUntil(event.minutesUntil)}
+                            </span>
+                          </div>
+                          {/* Mostrar recompensas si existen */}
+                          {event.rewards && event.rewards.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {event.rewards.slice(0, 2).map((reward, idx) => (
+                                <span key={idx} className="text-[10px] bg-diablo-gold/20 text-diablo-gold px-1.5 py-0.5 rounded" title={reward.descripcion}>
+                                  {reward.cantidad ? `${reward.nombre} x${reward.cantidad}` : reward.nombre}
+                                </span>
+                              ))}
+                              {event.rewards.length > 2 && (
+                                <span className="text-[10px] text-gray-500">+{event.rewards.length - 2}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+              
+              {/* Mensaje si hay más eventos */}
+              {events.length > 8 && (
+                <div className="mt-3 text-center text-xs text-gray-500">
+                  +{events.length - 8} eventos más próximamente
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -285,11 +409,12 @@ const Dashboard: React.FC = () => {
                   <span className="text-lg">🔍</span>
                   <span>Filtros</span>
                 </h3>
-                {(filter !== 'todas' || modalidadFilter !== 'todas') && (
+                {(filter !== 'todas' || modalidadFilter !== 'todas' || rewardFilter !== 'todas') && (
                   <button
                     onClick={() => {
                       setFilter('todas');
                       setModalidadFilter('todas');
+                      setRewardFilter('todas');
                     }}
                     className="text-xs text-gray-400 hover:text-diablo-gold transition"
                   >
@@ -336,6 +461,36 @@ const Dashboard: React.FC = () => {
                       >
                         <span>{m.icon}</span>
                         <span>{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-gray-500 mb-2.5 block font-semibold">Recompensa</label>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                    <button
+                      onClick={() => setRewardFilter('todas')}
+                      className={`w-full px-3 py-2 rounded-lg transition-all flex items-center gap-2 text-sm ${
+                        rewardFilter === 'todas'
+                          ? 'bg-diablo-gold text-diablo-dark font-semibold shadow-md transform scale-[1.02]' 
+                          : 'bg-diablo-medium/50 text-gray-300 hover:bg-diablo-medium border border-diablo-border/30 hover:border-diablo-border'
+                      }`}
+                    >
+                      <span>🎁</span>
+                      <span>Todas</span>
+                    </button>
+                    {rewards.map((reward) => (
+                      <button
+                        key={reward.id}
+                        onClick={() => setRewardFilter(reward.id)}
+                        className={`w-full px-3 py-2 rounded-lg transition-all text-sm text-left ${
+                          rewardFilter === reward.id 
+                            ? 'bg-diablo-gold text-diablo-dark font-semibold shadow-md transform scale-[1.02]' 
+                            : 'bg-diablo-medium/50 text-gray-300 hover:bg-diablo-medium border border-diablo-border/30 hover:border-diablo-border'
+                        }`}
+                        title={reward.descripcion || reward.nombre}
+                      >
+                        {reward.nombre}
                       </button>
                     ))}
                   </div>
@@ -411,11 +566,48 @@ const Dashboard: React.FC = () => {
                       </div>
                     </div>
                     
-                    {(filter !== 'todas' || modalidadFilter !== 'todas') && (
+                    <div>
+                      <label className="text-[10px] uppercase tracking-wider text-gray-500 mb-2.5 block font-semibold">Recompensa</label>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        <button
+                          onClick={() => setRewardFilter('todas')}
+                          className={`w-full px-4 py-3 rounded-xl transition-all flex items-center gap-2 text-sm font-medium ${
+                            rewardFilter === 'todas'
+                              ? 'bg-diablo-gold text-diablo-dark shadow-lg shadow-diablo-gold/30 scale-[1.02]' 
+                              : 'bg-diablo-medium/70 text-gray-300 border border-diablo-border/30 active:scale-95'
+                          }`}
+                        >
+                          <span>🎁</span>
+                          <span>Todas las Recompensas</span>
+                        </button>
+                        {rewards.slice(0, 5).map((reward) => (
+                          <button
+                            key={reward.id}
+                            onClick={() => setRewardFilter(reward.id)}
+                            className={`w-full px-4 py-3 rounded-xl transition-all text-sm font-medium text-left ${
+                              rewardFilter === reward.id 
+                                ? 'bg-diablo-gold text-diablo-dark shadow-lg shadow-diablo-gold/30 scale-[1.02]' 
+                                : 'bg-diablo-medium/70 text-gray-300 border border-diablo-border/30 active:scale-95'
+                            }`}
+                            title={reward.descripcion || reward.nombre}
+                          >
+                            {reward.nombre}
+                          </button>
+                        ))}
+                        {rewards.length > 5 && (
+                          <div className="text-xs text-gray-500 text-center pt-1">
+                            +{rewards.length - 5} recompensas más (usa filtros en escritorio)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {(filter !== 'todas' || modalidadFilter !== 'todas' || rewardFilter !== 'todas') && (
                       <button
                         onClick={() => {
                           setFilter('todas');
                           setModalidadFilter('todas');
+                          setRewardFilter('todas');
                         }}
                         className="w-full py-3 bg-diablo-red/20 text-diablo-gold hover:bg-diablo-red hover:text-white rounded-xl transition-all text-sm font-semibold border border-diablo-red/30"
                       >
@@ -436,11 +628,12 @@ const Dashboard: React.FC = () => {
                 Actividades
                 <span className="ml-2 text-sm text-gray-400">({filteredActivities.length})</span>
               </h2>
-              {(filter !== 'todas' || modalidadFilter !== 'todas') && (
+              {(filter !== 'todas' || modalidadFilter !== 'todas' || rewardFilter !== 'todas') && (
                 <button
                   onClick={() => {
                     setFilter('todas');
                     setModalidadFilter('todas');
+                    setRewardFilter('todas');
                   }}
                   className="text-xs text-gray-400 hover:text-diablo-gold hidden lg:block"
                 >
@@ -582,7 +775,27 @@ const Dashboard: React.FC = () => {
                         <span>🎁</span>
                         <span>Recompensas</span>
                       </h4>
-                      <p className="text-sm leading-relaxed">{selectedActivity.recompensas}</p>
+                      {selectedActivity.rewards && selectedActivity.rewards.length > 0 ? (
+                        <div className="space-y-2">
+                          {selectedActivity.rewards.map((reward, idx) => (
+                            <div key={idx} className="bg-diablo-medium/50 rounded p-2 border border-diablo-border/30">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-diablo-gold font-semibold text-sm">{reward.nombre}</span>
+                                {reward.cantidad && (
+                                  <span className="bg-diablo-gold/20 text-diablo-gold px-2 py-0.5 rounded text-xs font-bold">
+                                    x{reward.cantidad}
+                                  </span>
+                                )}
+                              </div>
+                              {reward.descripcion && (
+                                <p className="text-xs text-gray-400 leading-relaxed">{reward.descripcion}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">No hay recompensas especificadas</p>
+                      )}
                     </div>
                     <div className="border-t border-diablo-border pt-4">
                       <h4 className="text-diablo-gold-light font-semibold mb-2 flex items-center gap-2">
@@ -658,7 +871,27 @@ const Dashboard: React.FC = () => {
                         <span>🎁</span>
                         <span>Recompensas</span>
                       </h4>
-                      <p className="text-sm leading-relaxed">{selectedActivity.recompensas}</p>
+                      {selectedActivity.rewards && selectedActivity.rewards.length > 0 ? (
+                        <div className="space-y-2">
+                          {selectedActivity.rewards.map((reward, idx) => (
+                            <div key={idx} className="bg-diablo-medium/50 rounded p-2 border border-diablo-border/30">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-diablo-gold font-semibold text-sm">{reward.nombre}</span>
+                                {reward.cantidad && (
+                                  <span className="bg-diablo-gold/20 text-diablo-gold px-2 py-0.5 rounded text-xs font-bold">
+                                    x{reward.cantidad}
+                                  </span>
+                                )}
+                              </div>
+                              {reward.descripcion && (
+                                <p className="text-xs text-gray-400 leading-relaxed">{reward.descripcion}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">No hay recompensas especificadas</p>
+                      )}
                     </div>
                     <div className="border-t border-diablo-border pt-3">
                       <h4 className="text-diablo-gold-light font-semibold mb-2 text-sm flex items-center gap-2">
