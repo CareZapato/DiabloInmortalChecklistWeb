@@ -74,7 +74,8 @@ const Dashboard: React.FC = () => {
   };
 
   const goToPreviousDay = () => {
-    const date = new Date(selectedDate);
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     date.setDate(date.getDate() - 1);
     const newDate = formatDate(date);
     setSelectedDate(newDate);
@@ -82,7 +83,8 @@ const Dashboard: React.FC = () => {
   };
 
   const goToNextDay = () => {
-    const date = new Date(selectedDate);
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     date.setDate(date.getDate() + 1);
     const newDate = formatDate(date);
     setSelectedDate(newDate);
@@ -128,19 +130,26 @@ const Dashboard: React.FC = () => {
                 ⚔️ <span className="hidden sm:inline">DI Checklist</span>
               </h1>
               {/* Info de tiempo integrada */}
-              <div className="hidden md:flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-gray-400">🎮</span>
-                  <span className="text-diablo-gold font-bold">{formatTime(gameTime)}</span>
+              <div className="hidden md:flex items-center gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase">Hora del Juego</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400">🎮</span>
+                    <span className="text-diablo-gold font-bold text-base">{formatTime(gameTime)}</span>
+                  </div>
                 </div>
-                <div className="text-gray-400">
-                  ⏰ <span className="text-diablo-gold">{hours}h {minutes}m</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase">Reinicio en</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-400">⏰</span>
+                    <span className="text-diablo-gold font-bold text-base">{hours}h {minutes}m</span>
+                  </div>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-gray-300 text-xs sm:text-sm">
-                <span className="text-diablo-gold">{user?.username}</span>
+              <span className="text-gray-300 text-sm sm:text-base">
+                <span className="text-diablo-gold font-semibold">{user?.username}</span>
               </span>
               <button onClick={logout} className="btn-secondary text-xs px-2 py-1 sm:px-3 sm:py-1.5">
                 <span className="hidden sm:inline">Salir</span>
@@ -149,11 +158,15 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           {/* Time info para móvil */}
-          <div className="flex md:hidden justify-between items-center mt-2 pt-2 border-t border-diablo-border text-xs">
-            <div className="flex items-center gap-3">
-              <span className="text-gray-400">🎮 <span className="text-diablo-gold font-bold">{formatTime(gameTime)}</span></span>
+          <div className="flex md:hidden justify-between items-center mt-2 pt-2 border-t border-diablo-border">
+            <div className="flex flex-col">
+              <span className="text-[9px] text-gray-500 uppercase mb-0.5">Hora del Juego</span>
+              <span className="text-gray-400 text-sm">🎮 <span className="text-diablo-gold font-bold">{formatTime(gameTime)}</span></span>
             </div>
-            <span className="text-gray-400">⏰ <span className="text-diablo-gold">{hours}h {minutes}m</span></span>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-gray-500 uppercase mb-0.5">Reinicio en</span>
+              <span className="text-gray-400 text-sm">⏰ <span className="text-diablo-gold font-bold">{hours}h {minutes}m</span></span>
+            </div>
           </div>
         </div>
       </header>
@@ -166,7 +179,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={goToPreviousDay}
-                className="p-2 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
+                className="w-9 h-9 flex items-center justify-center bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
                 title="Día anterior"
               >
                 ◀
@@ -179,7 +192,7 @@ const Dashboard: React.FC = () => {
               </div>
               <button
                 onClick={goToNextDay}
-                className="p-2 bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
+                className="w-9 h-9 flex items-center justify-center bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
                 title="Día siguiente"
               >
                 ▶

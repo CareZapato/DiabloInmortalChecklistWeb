@@ -150,27 +150,27 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate, totalAc
   const monthName = currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="bg-diablo-panel border border-diablo-border rounded-lg p-3 sm:p-4">
+    <div className="bg-diablo-panel border border-diablo-border rounded-lg p-2 max-w-md mx-auto">
       {/* Header Minimalista */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm sm:text-base font-semibold text-diablo-gold-light capitalize">{monthName}</h3>
-        <div className="flex gap-1.5">
+      <div className="flex items-center justify-between mb-1.5">
+        <h3 className="text-xs font-semibold text-diablo-gold-light capitalize">{monthName}</h3>
+        <div className="flex gap-1">
           <button
             onClick={previousMonth}
-            className="w-7 h-7 flex items-center justify-center bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
+            className="w-5 h-5 flex items-center justify-center bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition text-[10px]"
             title="Mes anterior"
           >
             ◀
           </button>
           <button
             onClick={goToToday}
-            className="px-2 h-7 bg-diablo-gold text-diablo-dark hover:bg-yellow-500 rounded font-semibold transition text-xs"
+            className="px-1.5 h-5 bg-diablo-gold text-diablo-dark hover:bg-yellow-500 rounded font-semibold transition text-[9px]"
           >
             Hoy
           </button>
           <button
             onClick={nextMonth}
-            className="w-7 h-7 flex items-center justify-center bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition"
+            className="w-5 h-5 flex items-center justify-center bg-diablo-medium hover:bg-diablo-gold hover:text-diablo-dark text-gray-300 rounded transition text-[10px]"
             title="Mes siguiente"
           >
             ▶
@@ -179,9 +179,9 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate, totalAc
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-0.5 mb-0.5">
         {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map((day) => (
-          <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-gray-500 py-0.5">
+          <div key={day} className="text-center text-[8px] font-medium text-gray-500">
             {day}
           </div>
         ))}
@@ -189,11 +189,11 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate, totalAc
 
       {/* Calendar grid */}
       {isLoading ? (
-        <div className="flex justify-center items-center h-40">
+        <div className="flex justify-center items-center h-24">
           <div className="text-xs text-gray-500">Cargando...</div>
         </div>
       ) : (
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5">
           {days.map((day, index) => {
             const isSelected = day.dateString === selectedDate;
             const completionColor = day.hasProgress
@@ -206,20 +206,20 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate, totalAc
                 onClick={() => onDateSelect(day.dateString)}
                 disabled={!day.isCurrentMonth}
                 className={`
-                  relative aspect-square rounded text-[10px] sm:text-xs transition-all flex flex-col items-center justify-center gap-0.5
+                  relative aspect-square rounded text-[8px] transition-all flex flex-col items-center justify-center
                   ${day.isCurrentMonth ? 'cursor-pointer' : 'cursor-not-allowed opacity-20'}
-                  ${isSelected ? 'ring-2 ring-diablo-gold' : ''}
-                  ${day.isToday ? 'ring-1 ring-yellow-500' : ''}
+                  ${isSelected ? 'ring-1 ring-diablo-gold' : ''}
+                  ${day.isToday ? 'ring-1 ring-yellow-400' : ''}
                   ${completionColor}
-                  ${day.isCurrentMonth ? 'hover:scale-110 hover:z-10 hover:shadow-lg' : ''}
+                  ${day.isCurrentMonth ? 'hover:scale-105 hover:z-10' : ''}
                 `}
                 title={`${day.dateString}: ${day.completedCount}/${day.totalCount} completadas`}
               >
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-white leading-none">
                   {day.date.getDate()}
                 </span>
                 {day.hasProgress && (
-                  <span className="text-[8px] text-gray-300 opacity-90">
+                  <span className="text-[6px] text-gray-300 opacity-90 leading-none mt-0.5">
                     {day.completedCount}
                   </span>
                 )}
@@ -230,27 +230,27 @@ const Calendar: React.FC<CalendarProps> = ({ onDateSelect, selectedDate, totalAc
       )}
 
       {/* Legend Compacta */}
-      <div className="mt-3 pt-3 border-t border-diablo-border/50">
-        <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-diablo-medium/50 rounded"></div>
-            <span>0%</span>
+      <div className="mt-1.5 pt-1.5 border-t border-diablo-border/50">
+        <div className="flex items-center justify-between text-[8px] text-gray-500">
+          <div className="flex items-center gap-0.5">
+            <div className="w-1 h-1 bg-diablo-medium/50 rounded"></div>
+            <span>0</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-red-700 rounded"></div>
-            <span>25%</span>
+          <div className="flex items-center gap-0.5">
+            <div className="w-1 h-1 bg-red-700 rounded"></div>
+            <span>25</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-orange-600 rounded"></div>
-            <span>50%</span>
+          <div className="flex items-center gap-0.5">
+            <div className="w-1 h-1 bg-orange-600 rounded"></div>
+            <span>50</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-yellow-600 rounded"></div>
-            <span>75%</span>
+          <div className="flex items-center gap-0.5">
+            <div className="w-1 h-1 bg-yellow-600 rounded"></div>
+            <span>75</span>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-600 rounded"></div>
-            <span>100%</span>
+          <div className="flex items-center gap-0.5">
+            <div className="w-1 h-1 bg-green-600 rounded"></div>
+            <span>100</span>
           </div>
         </div>
       </div>
