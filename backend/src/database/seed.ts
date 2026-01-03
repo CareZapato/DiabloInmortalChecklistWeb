@@ -168,6 +168,18 @@ const seedDatabase = async () => {
         preferencia: 'grupal'
       },
       {
+        id: 'weekly_random_dungeons_set',
+        nombre: '3 mazmorras al azar (recompensa de parte de equipo de set)',
+        tipo: 'semanal',
+        prioridad: 'A',
+        tiempo_aprox: '15–30 min',
+        recompensas: 'Parte de equipo de set (head, chest, legs, etc.), materiales.',
+        mejora: 'Progreso hacia sets completos que otorgan bonificadores poderosos.',
+        detalle: 'Completa 3 mazmorras aleatorias cada semana para obtener una parte garantizada de equipo de set. Los sets completos ofrecen bonificadores significativos que mejoran tu build.',
+        modo: 'ambas',
+        preferencia: 'grupal'
+      },
+      {
         id: 'weekly_elder_rift_embers',
         nombre: 'Fisura Antigua (Elder Rift) - Brasas debilitadas',
         tipo: 'semanal',

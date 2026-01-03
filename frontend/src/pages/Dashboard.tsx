@@ -117,6 +117,10 @@ const Dashboard: React.FC = () => {
     const currentStatus = progress.get(activityId) || false;
     const newStatus = !currentStatus;
     
+    // Find the activity to check if it's weekly
+    const activity = activities.find(a => a.id === activityId);
+    const isWeekly = activity?.tipo === 'semanal';
+    
     // Update optimistically
     const newProgress = new Map(progress);
     newProgress.set(activityId, newStatus);
@@ -125,6 +129,12 @@ const Dashboard: React.FC = () => {
     try {
       await progressService.update(activityId, newStatus, selectedDate);
       console.log(`✅ Progress updated for ${activityId}: ${newStatus}`);
+      
+      // If it's a weekly activity and was marked as complete, reload progress for the current date
+      // This will reflect all the days that were marked in the backend
+      if (isWeekly && newStatus) {
+        await loadProgress(selectedDate);
+      }
     } catch (error) {
       console.error('❌ Error updating progress:', error);
       // Revert on error
